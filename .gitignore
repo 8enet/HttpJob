@@ -1,3 +1,4 @@
+
 *.class
 
 # Package Files #
@@ -7,6 +8,5 @@
 
 #idea
 /out
-
-*.iml
 /.idea
+*.iml
