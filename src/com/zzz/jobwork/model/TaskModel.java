@@ -1,18 +1,23 @@
 package com.zzz.jobwork.model;
 
+import com.sun.istack.internal.Nullable;
 import com.zzz.jobwork.model.config.TaskConfigFactory;
 import com.zzz.jobwork.utils.StringUtils;
-
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 /**
  * 任务模型
  * Created by zl on 2014/11/25.
  */
+@Entity
 public class TaskModel extends BaseBean{
 
     /**
      *
      */
-    private int id;
+    @Id
+    private String id;
 
     /**
      * 创建时间
@@ -76,11 +81,11 @@ public class TaskModel extends BaseBean{
     private int weigth;
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -98,6 +103,7 @@ public class TaskModel extends BaseBean{
 
     public void setLastRunTime(long lastRunTime) {
         this.lastRunTime = lastRunTime;
+
     }
 
     public long getNextRunTime() {
@@ -187,4 +193,23 @@ public class TaskModel extends BaseBean{
         return TaskConfigFactory.getTaskConfig(type,taskConfig);
     }
 
+
+    @Override
+    public String toString() {
+        return "TaskModel{" +
+                "id=" + id +
+                ", creatTime=" + creatTime +
+                ", lastRunTime=" + lastRunTime +
+                ", nextRunTime=" + nextRunTime +
+                ", runCount=" + runCount +
+                ", state=" + state +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", taskConfig='" + taskConfig + '\'' +
+                ", type='" + type + '\'' +
+                ", resultCompare='" + resultCompare + '\'' +
+                ", retry='" + retry + '\'' +
+                ", weigth=" + weigth +
+                '}';
+    }
 }
