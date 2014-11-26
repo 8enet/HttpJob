@@ -1,5 +1,8 @@
 package com.zzz.jobwork.model;
 
+import com.zzz.jobwork.model.config.TaskConfigFactory;
+import com.zzz.jobwork.utils.StringUtils;
+
 /**
  * 任务模型
  * Created by zl on 2014/11/25.
@@ -53,6 +56,11 @@ public class TaskModel extends BaseBean{
     private String taskConfig;
 
     /**
+     * 类型
+     */
+    private String type;
+
+    /**
      * 结果比较
      */
     private String resultCompare;
@@ -67,5 +75,116 @@ public class TaskModel extends BaseBean{
      */
     private int weigth;
 
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public long getCreatTime() {
+        return creatTime;
+    }
+
+    public void setCreatTime(long creatTime) {
+        this.creatTime = creatTime;
+    }
+
+    public long getLastRunTime() {
+        return lastRunTime;
+    }
+
+    public void setLastRunTime(long lastRunTime) {
+        this.lastRunTime = lastRunTime;
+    }
+
+    public long getNextRunTime() {
+        return nextRunTime;
+    }
+
+    public void setNextRunTime(long nextRunTime) {
+        this.nextRunTime = nextRunTime;
+    }
+
+    public int getRunCount() {
+        return runCount;
+    }
+
+    public void setRunCount(int runCount) {
+        this.runCount = runCount;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getTaskConfig() {
+        return taskConfig;
+    }
+
+    public void setTaskConfig(String taskConfig) {
+        this.taskConfig = taskConfig;
+    }
+
+    public String getResultCompare() {
+        return resultCompare;
+    }
+
+    public void setResultCompare(String resultCompare) {
+        this.resultCompare = resultCompare;
+    }
+
+    public String getRetry() {
+        return retry;
+    }
+
+    public void setRetry(String retry) {
+        this.retry = retry;
+    }
+
+    public int getWeigth() {
+        return weigth;
+    }
+
+    public void setWeigth(int weigth) {
+        this.weigth = weigth;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public TaskConfig getRealTaskConfig(){
+
+        if(StringUtils.isEmpty(type))
+            type=TaskConfig.Type.HTTP.name();
+        return TaskConfigFactory.getTaskConfig(type,taskConfig);
+    }
 
 }

@@ -4,6 +4,7 @@ package com.zzz.jobwork.http;
 import com.squareup.okhttp.*;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import com.zzz.jobwork.task.OnHttpTaskListener;
+import com.zzz.jobwork.utils.CacheManager;
 import com.zzz.jobwork.utils.StringUtils;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,35 +34,38 @@ public class HttpRequest {
         this.listener=listener;
     }
 
-    private static Map<String,SoftReference<OkHttpClient>> cache=new Hashtable<String, SoftReference<OkHttpClient>>();
+    private static Map<String,SoftReference<OkHttpClient>> cache=new HashMap<>();
 
     private  OkHttpClient creatHttpClient(){
 
-        SoftReference<OkHttpClient> ref=cache.get(config.format2String());
-        if (ref != null && ref.get() !=null){
+        String key=config.format2String();
+        //OkHttpClient client= CacheManager.getInstance().getOkHttpClient(key);
+
+        logger.debug("httpclient return start");
+        SoftReference<OkHttpClient> ref=cache.get(key);
+        OkHttpClient client=null;
+        if (ref!=null &&   ref.get()!= null ){
+            client=ref.get();
             logger.debug("httpclient return from cache");
-            return ref.get();
+            return client;
         }
 
         logger.debug("httpclient return from new instance");
-        OkHttpClient client=null;
-
-
+        client=new OkHttpClient();
         if(StringUtils.isEmpty(config.getProxyIp()) && config.getProxyPort() >0 ){
 //            HttpHost proxy = new HttpHost(config.getProxyIp(), config.getProxyPort());
 //            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
 //            client=HttpClients.custom().setRoutePlanner(routePlanner).build();
             Proxy proxy=new Proxy(Proxy.Type.HTTP, new InetSocketAddress(config.getProxyIp(), config.getProxyPort()));
+            client.setProxy(proxy);
             logger.debug("httpclient set proxy:"+config.getProxyIp()+":"+proxy);
-        }else {
-            client=new OkHttpClient();
         }
-        cache.remove(config.format2String());
-        cache.put(config.format2String(),new SoftReference<OkHttpClient>(client));
+        cache.put(key,new SoftReference<OkHttpClient>(client));
+
+//        CacheManager.getInstance().removeOkHttpClient(key);
+//        CacheManager.getInstance().putOkHttpClient(key,client);
         return client;
     }
-
-
 
 
     public Response execute(){
@@ -69,32 +73,16 @@ public class HttpRequest {
             listener.onStart();
         }
 
-        OkHttpClient client=creatHttpClient();
-
-
         Response response = null;
         try {
             boolean retry = false;
             int r = 0;
+            OkHttpClient client=new OkHttpClient();
             do {
-
-                Request request = getRequest();
-
+                //OkHttpClient client=creatHttpClient();
                 logger.debug(" http request " + config.getUrl());
-
-//                client.newCall(request).enqueue(new Callback() {
-//                    @Override
-//                    public void onFailure(Request request, IOException e) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onResponse(Response response) throws IOException {
-//                        logger.debug(response);
-//                    }
-//                });
-               response= client.newCall(request).execute();
-
+                response= client.newCall(getRequest()).execute();
+                logger.debug(" http resopnse "+response);
                 if (response.isSuccessful()) {
                     retry = false;
                     if (listener != null)
@@ -103,7 +91,6 @@ public class HttpRequest {
                     if (r < 3) {
                         r++;
                         retry = true;
-
                         if (listener != null)
                             listener.onRetry(r);
                     } else {
@@ -113,16 +100,11 @@ public class HttpRequest {
                     }
                 }
             } while (retry);
-
-            System.out.println(response);
-
         }catch (Exception e){
             e.printStackTrace();
         }finally {
-
-                if(listener != null)
-                    listener.onFinsh();
-
+            if(listener != null)
+             listener.onFinsh();
         }
         return response;
 
@@ -142,7 +124,6 @@ public class HttpRequest {
 
     }
 
-
     private Request.Builder getBuilder(){
         Request.Builder builder=new Request.Builder();
         if (config.getHeaderParams() != null) {
@@ -157,20 +138,12 @@ public class HttpRequest {
 
 
     private Request creatHttpGet(){
-
         return getBuilder()
                 .url(parseGetParams(config.getUrl(), config.getRequestParams()))
                 .build();
     }
-//
-//    private void addHeader(HttpUriRequest request){
-//        if (config.getHeaderParams() != null) {
-//            for (String s : config.getHeaderParams().keySet()) {
-//                request.addHeader(s, config.getHeaderParams().get(s));
-//            }
-//        }
-//    }
-//
+
+
     private Request creatHttpPost(){
 
         return getBuilder()
@@ -182,24 +155,22 @@ public class HttpRequest {
 
     public static String parseGetParams(String url, Map<String, String> params) {
         StringBuilder sb = new StringBuilder();
-        if (params != null) {
+        if (params != null && !params.isEmpty()) {
             String value = "";
             for (String key : params.keySet()) {
                 value = params.get(key);
                 if (value == null)
                     value = "";
-
                 sb.append(key + "=" + value).append("&");
             }
             if(sb.length() >= 1){
                 sb.deleteCharAt(sb.length()-1);
             }
+            return url + "?" + sb.toString();
         }
-        //System.out.println(url + "?" + sb.toString());
-        if(sb.length() >0)
-        return url + "?" + sb.toString();
-        else
-            return url;
+
+
+        return url;
     }
 
 

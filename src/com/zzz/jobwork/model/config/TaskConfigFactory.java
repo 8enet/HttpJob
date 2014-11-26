@@ -1,6 +1,7 @@
 package com.zzz.jobwork.model.config;
 
 import com.zzz.jobwork.model.TaskConfig;
+import com.zzz.jobwork.utils.JsonUtil;
 import com.zzz.jobwork.utils.StringUtils;
 
 /**
@@ -8,11 +9,11 @@ import com.zzz.jobwork.utils.StringUtils;
  */
 public class TaskConfigFactory {
 
-    public static TaskConfig getTaskConfig(String type){
+    public static TaskConfig getTaskConfig(String type,String config){
 
         if(!StringUtils.isEmpty(type)){
             if(type.equals(TaskConfig.Type.HTTP.name())){
-                return new SimpleHttpTaskConfig();
+                return JsonUtil.getGson().fromJson(config,SimpleHttpTaskConfig.class);
             }
         }
         return null;

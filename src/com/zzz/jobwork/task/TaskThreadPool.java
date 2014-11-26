@@ -1,6 +1,8 @@
 package com.zzz.jobwork.task;
 
 import com.squareup.okhttp.Response;
+import com.zzz.jobwork.model.TaskModel;
+import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,7 +22,18 @@ public class TaskThreadPool {
     private static ExecutorService threadPool =  new ThreadPoolExecutor(CORE_THREAD, Integer.MAX_VALUE,
             TIME_OUT_THREAD, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
 
-    private static CompletionService<Response> completionService = new ExecutorCompletionService<Response>(threadPool);
+    private static CompletionService<Response> completionService = new ExecutorCompletionService<>(threadPool);
+
+    public static void addWork(TaskModel taskModel,OnHttpTaskListener listener){
+        SimpleHttpTaskConfig config= (SimpleHttpTaskConfig) taskModel.getRealTaskConfig();
+        if(config != null){
+            if(listener != null){
+                config.setOnHttpTaskListener(listener);
+            }
+
+            addWork(config);
+        }
+    }
 
     public static void addWork(Callable callable){
         logger.debug("add work:"+callable);

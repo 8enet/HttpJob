@@ -9,7 +9,16 @@ public class StringUtils {
 
 
     public static String preConfig(String prefix){
-        return "#"+prefix+"#|";
+        return ""+prefix+"|";
+    }
+
+    public static String delPrefix(String config){
+
+
+        if(isEmpty(config))
+            return "";
+        return config.substring(config.indexOf("|")+1);
+
     }
 
     public static boolean isEmpty(String s){

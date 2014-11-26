@@ -7,6 +7,7 @@ import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.JsonUtil;
 import com.zzz.jobwork.utils.StringUtils;
 
+import javax.sound.midi.Soundbank;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -99,7 +100,7 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
 
     @Override
     public String format2String() {
-        return StringUtils.preConfig(HTTP_TASK_CONFIG_PREFIX)+ JsonUtil.getGson().toJson(this);
+        return JsonUtil.getGson().toJson(this);
     }
 
     @Override
