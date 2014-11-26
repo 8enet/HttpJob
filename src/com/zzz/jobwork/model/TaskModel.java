@@ -61,4 +61,11 @@ public class TaskModel extends BaseBean{
      * 重试次数
      */
     private String retry;
+
+    /**
+     * 权重
+     */
+    private int weigth;
+
+
 }

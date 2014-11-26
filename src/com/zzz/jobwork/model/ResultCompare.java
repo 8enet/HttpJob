@@ -10,4 +10,7 @@ public class ResultCompare extends BaseBean{
      */
     private String execReturn;
 
+    private int length;
+
+    private String statusCode;
 }

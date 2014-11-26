@@ -1,12 +1,16 @@
 package com.zzz.jobwork.model.config;
 
+import com.squareup.okhttp.Response;
 import com.zzz.jobwork.http.HttpRequest;
 import com.zzz.jobwork.model.TaskConfig;
+import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.JsonUtil;
 import com.zzz.jobwork.utils.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 简单的http请求配置
@@ -25,6 +29,7 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
     private String userAgent;
     private Map<String,String> headerParams;
 
+    private OnHttpTaskListener listener;
 
     public String getUrl() {
         return url;
@@ -88,6 +93,10 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
         this.headerParams = headerParams;
     }
 
+    public void setOnHttpTaskListener(OnHttpTaskListener listener) {
+        this.listener = listener;
+    }
+
     @Override
     public String format2String() {
         return StringUtils.preConfig(HTTP_TASK_CONFIG_PREFIX)+ JsonUtil.getGson().toJson(this);
@@ -99,7 +108,47 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
     }
 
     @Override
-    public String call() throws Exception {
-        return new HttpRequest(this).execute();
+    public Response call() throws Exception {
+        if(StringUtils.isEmpty(url)){
+            throw new NullPointerException("http request url not null !!!");
+        }
+
+        return new HttpRequest(this,listener).execute();
     }
+
+
+    public void setDefaultHeader(){
+        setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        setHeader("Accept-Encoding", "gzip,deflate,sdch");
+        setHeader("Cache-Control", "max-age=0");
+        setHeader("DNT", "1");
+        setHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36");
+    }
+
+    public void setHeader(String key,String value){
+        if(headerParams == null){
+            headerParams=new HashMap<>(5);
+        }
+        headerParams.put(key,value);
+    }
+
+    public String getHost(){
+        if(StringUtils.isEmpty(url)){
+            Pattern p = Pattern.compile("(http://|https://)?([^/]*)",Pattern.CASE_INSENSITIVE);
+            Matcher m = p.matcher(url);
+            return m.find()?m.group(2):url;
+        }
+        return null;
+    }
+
+    public void setDefaultReferer(){
+        String host=getHost();
+        if(host != null){
+            setHeader("Referer","http://"+host+"/");
+        }
+    }
+
+
+
+
 }

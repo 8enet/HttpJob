@@ -1,82 +1,136 @@
 package com.zzz.jobwork.http;
 
 
-import com.google.gson.annotations.Expose;
+import com.squareup.okhttp.*;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
+import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.*;
 
 /**
  * Created by zl on 2014/11/25.
  */
 public class HttpRequest {
+    private static Logger logger= LogManager.getLogger(HttpRequest.class);
 
     private SimpleHttpTaskConfig config;
 
+    private OnHttpTaskListener listener;
     public HttpRequest(SimpleHttpTaskConfig config){
         this.config=config;
     }
 
-    private static Map<String,SoftReference<DefaultHttpClient>> cache=new Hashtable<String, SoftReference<DefaultHttpClient>>();
-    private  DefaultHttpClient creatHttpClient(){
+    public HttpRequest(SimpleHttpTaskConfig config,OnHttpTaskListener listener){
+        this.config=config;
+        this.listener=listener;
+    }
 
-        SoftReference<DefaultHttpClient> ref=cache.get(config.format2String());
+    private static Map<String,SoftReference<OkHttpClient>> cache=new Hashtable<String, SoftReference<OkHttpClient>>();
+
+    private  OkHttpClient creatHttpClient(){
+
+        SoftReference<OkHttpClient> ref=cache.get(config.format2String());
         if (ref != null && ref.get() !=null){
+            logger.debug("httpclient return from cache");
             return ref.get();
         }
 
-        DefaultHttpClient client=new DefaultHttpClient();
+        logger.debug("httpclient return from new instance");
+        OkHttpClient client=null;
+
 
         if(StringUtils.isEmpty(config.getProxyIp()) && config.getProxyPort() >0 ){
-            HttpHost proxy = new HttpHost(config.getProxyIp(), config.getProxyPort());
-            client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+//            HttpHost proxy = new HttpHost(config.getProxyIp(), config.getProxyPort());
+//            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+//            client=HttpClients.custom().setRoutePlanner(routePlanner).build();
+            Proxy proxy=new Proxy(Proxy.Type.HTTP, new InetSocketAddress(config.getProxyIp(), config.getProxyPort()));
+            logger.debug("httpclient set proxy:"+config.getProxyIp()+":"+proxy);
+        }else {
+            client=new OkHttpClient();
         }
-
         cache.remove(config.format2String());
-        cache.put(config.format2String(),new SoftReference<DefaultHttpClient>(client));
-
+        cache.put(config.format2String(),new SoftReference<OkHttpClient>(client));
         return client;
     }
 
 
 
 
-    public String execute() throws Exception{
-        HttpUriRequest request=getRequest();
-        System.out.println(" http request "+config.getUrl());
-        if(request != null){
-            addHeader(request);
-            HttpResponse response=creatHttpClient().execute(request);
-            if(response.getStatusLine().getStatusCode()==200){
-                return EntityUtils.toString(response.getEntity());
-            }
+    public Response execute(){
+        if(listener != null){
+            listener.onStart();
+        }
+
+        OkHttpClient client=creatHttpClient();
+
+
+        Response response = null;
+        try {
+            boolean retry = false;
+            int r = 0;
+            do {
+
+                Request request = getRequest();
+
+                logger.debug(" http request " + config.getUrl());
+
+//                client.newCall(request).enqueue(new Callback() {
+//                    @Override
+//                    public void onFailure(Request request, IOException e) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onResponse(Response response) throws IOException {
+//                        logger.debug(response);
+//                    }
+//                });
+               response= client.newCall(request).execute();
+
+                if (response.isSuccessful()) {
+                    retry = false;
+                    if (listener != null)
+                        listener.onSuccess(response);
+                } else {
+                    if (r < 3) {
+                        r++;
+                        retry = true;
+
+                        if (listener != null)
+                            listener.onRetry(r);
+                    } else {
+                        retry = false;
+                        if (listener != null)
+                            listener.onError(response, null);
+                    }
+                }
+            } while (retry);
+
+            System.out.println(response);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+
+                if(listener != null)
+                    listener.onFinsh();
 
         }
-        return null;
+        return response;
+
+
     }
     
     
-    private HttpUriRequest getRequest(){
+    private Request getRequest(){
         if("get".equalsIgnoreCase(config.getRequestMethod())){
             return creatHttpGet();
         }else if("post".equalsIgnoreCase(config.getRequestMethod())){
@@ -89,26 +143,40 @@ public class HttpRequest {
     }
 
 
-
-
-    private HttpGet creatHttpGet(){
-        HttpGet httpGet = new HttpGet(parseGetParams(config.getUrl(),config.getRequestParams()));
-
-        return httpGet;
-    }
-
-    private void addHeader(HttpUriRequest request){
+    private Request.Builder getBuilder(){
+        Request.Builder builder=new Request.Builder();
         if (config.getHeaderParams() != null) {
             for (String s : config.getHeaderParams().keySet()) {
-                request.addHeader(s, config.getHeaderParams().get(s));
+                builder.addHeader(s, config.getHeaderParams().get(s));
             }
         }
+
+        return builder;
     }
 
-    private HttpPost creatHttpPost(){
-        HttpPost post=new HttpPost(config.getUrl());
-        post.setEntity(getPostEntity(config.getRequestParams()));
-        return post;
+
+
+    private Request creatHttpGet(){
+
+        return getBuilder()
+                .url(parseGetParams(config.getUrl(), config.getRequestParams()))
+                .build();
+    }
+//
+//    private void addHeader(HttpUriRequest request){
+//        if (config.getHeaderParams() != null) {
+//            for (String s : config.getHeaderParams().keySet()) {
+//                request.addHeader(s, config.getHeaderParams().get(s));
+//            }
+//        }
+//    }
+//
+    private Request creatHttpPost(){
+
+        return getBuilder()
+                .url(config.getUrl())
+                .post(getPostEntity(config.getRequestParams()))
+                .build();
     }
 
 
@@ -140,18 +208,19 @@ public class HttpRequest {
      * 创建POST提交实体
 
      */
-    public static UrlEncodedFormEntity getPostEntity(
+    public static RequestBody getPostEntity(
             Map<String, String> parameter)  {
         try {
-            List<NameValuePair> formparams = new ArrayList<NameValuePair>();
-            // 贴吧签到需要 ie=utf-8&kw=xxx&tbs=989
+            FormEncodingBuilder formBody = new FormEncodingBuilder();
             if (parameter != null) {
-                for (String s : parameter.keySet()) {
-                    formparams.add(new BasicNameValuePair(s, parameter.get(s)));
+                Set<Map.Entry<String, String>> entries = parameter.entrySet();
+                for (Map.Entry<String, String> entry : entries) {
+                    formBody.add(entry.getKey(),entry.getValue());
                 }
+
+                return formBody.build();
             }
-            return new UrlEncodedFormEntity(formparams,
-                    "UTF-8");
+
         }catch (Exception e){
 
         }

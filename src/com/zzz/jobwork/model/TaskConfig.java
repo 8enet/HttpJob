@@ -1,6 +1,7 @@
 package com.zzz.jobwork.model;
 
 import com.google.gson.annotations.Expose;
+import com.squareup.okhttp.Response;
 
 import java.util.concurrent.Callable;
 
@@ -8,7 +9,7 @@ import java.util.concurrent.Callable;
  * 定时任务配置
  * Created by zl on 2014/11/25.
  */
-public abstract class TaskConfig<T> extends BaseBean implements Callable<String> {
+public abstract class TaskConfig<T> extends BaseBean implements Callable<Response> {
 
     public enum Type{
         HTTP,SEND_MSG
