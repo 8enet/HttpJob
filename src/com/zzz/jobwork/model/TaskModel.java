@@ -1,6 +1,5 @@
 package com.zzz.jobwork.model;
 
-import com.sun.istack.internal.Nullable;
 import com.zzz.jobwork.model.config.TaskConfigFactory;
 import com.zzz.jobwork.utils.StringUtils;
 import org.bson.types.ObjectId;
@@ -79,6 +78,11 @@ public class TaskModel extends BaseBean{
      * 权重
      */
     private int weigth;
+
+    /**
+     * 最小间隔时间(秒)
+     */
+    private int baseInterval;
 
 
     public String getId() {
@@ -197,7 +201,7 @@ public class TaskModel extends BaseBean{
     @Override
     public String toString() {
         return "TaskModel{" +
-                "id=" + id +
+                "id='" + id + '\'' +
                 ", creatTime=" + creatTime +
                 ", lastRunTime=" + lastRunTime +
                 ", nextRunTime=" + nextRunTime +
@@ -210,6 +214,7 @@ public class TaskModel extends BaseBean{
                 ", resultCompare='" + resultCompare + '\'' +
                 ", retry='" + retry + '\'' +
                 ", weigth=" + weigth +
+                ", baseInterval=" + baseInterval +
                 '}';
     }
 }

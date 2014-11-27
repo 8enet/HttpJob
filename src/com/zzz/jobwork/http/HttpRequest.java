@@ -34,21 +34,27 @@ public class HttpRequest {
         this.listener=listener;
     }
 
-    private static Map<String,SoftReference<OkHttpClient>> cache=new HashMap<>();
+    private static Map<String,SoftReference<OkHttpClient>> cache=new Hashtable<>();
 
     private  OkHttpClient creatHttpClient(){
 
         String key=config.format2String();
-        //OkHttpClient client= CacheManager.getInstance().getOkHttpClient(key);
+        OkHttpClient client= CacheManager.getInstance().getOkHttpClient(key);
 
         logger.debug("httpclient return start");
-        SoftReference<OkHttpClient> ref=cache.get(key);
-        OkHttpClient client=null;
-        if (ref!=null &&   ref.get()!= null ){
-            client=ref.get();
+        if(client != null){
             logger.debug("httpclient return from cache");
             return client;
         }
+
+ //       SoftReference<OkHttpClient> ref=cache.get(key);
+        //OkHttpClient client=null;
+//        if (ref!=null &&   ref.get()!= null ){
+//            client=ref.get();
+//            logger.debug("httpclient return from cache");
+//            return client;
+//        }
+
 
         logger.debug("httpclient return from new instance");
         client=new OkHttpClient();
@@ -60,10 +66,10 @@ public class HttpRequest {
             client.setProxy(proxy);
             logger.debug("httpclient set proxy:"+config.getProxyIp()+":"+proxy);
         }
-        cache.put(key,new SoftReference<OkHttpClient>(client));
+        //cache.put(key,new SoftReference<OkHttpClient>(client));
 
 //        CacheManager.getInstance().removeOkHttpClient(key);
-//        CacheManager.getInstance().putOkHttpClient(key,client);
+        CacheManager.getInstance().putOkHttpClient(key,client);
         return client;
     }
 
@@ -76,8 +82,8 @@ public class HttpRequest {
         Response response = null;
         try {
             boolean retry = false;
-            int r = 0;
-            OkHttpClient client=new OkHttpClient();
+            int r = 3;
+            OkHttpClient client=creatHttpClient();
             do {
                 //OkHttpClient client=creatHttpClient();
                 logger.debug(" http request " + config.getUrl());

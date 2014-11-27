@@ -1,24 +1,26 @@
 package com.zzz.jobwork.utils;
 
 import com.squareup.okhttp.OkHttpClient;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.Element;
 
 public class CacheManager {
-    
-    private BaseCache newsCache;  
-  
-      
+
     private static CacheManager instance;  
-    private static Object lock = new Object();  
-      
-    public CacheManager() {  
-        //这个根据配置文件来，初始BaseCache而已;  
-        newsCache = new BaseCache("OkHttpClient",18000);
+
+    private Cache cache;
+    private net.sf.ehcache.CacheManager cacheManager;
+
+    private CacheManager() {
+        cacheManager= net.sf.ehcache.CacheManager.create();
+        cache = new Cache("OkHttpClient", 5000, false, false, 5*60, 1);
+        cacheManager.addCache(cache);
     }  
       
     public static CacheManager getInstance(){  
         if (instance == null){  
-            synchronized( lock ){
-                if (instance == null){  
+            synchronized( CacheManager.class ){
+                if (instance == null){
                     instance = new CacheManager();  
                 }  
             }  
@@ -26,27 +28,30 @@ public class CacheManager {
         return instance;  
     }  
   
-    public void putOkHttpClient(String key,OkHttpClient news) {
-        newsCache.put(key,news);
+    public void putOkHttpClient(String key,OkHttpClient client) {
+        Element element = new Element(key,client);
+        cache.put(element);
     }  
   
     public void removeOkHttpClient(String key) {
-        // TODO 自动生成方法存根  
-        newsCache.remove(key);
+        cache.remove(key);
     }  
   
     public OkHttpClient getOkHttpClient(String key) {
         try {
-            return (OkHttpClient) newsCache.get(key);
+            Element value = cache.get(key);
+            if(value != null){
+                return (OkHttpClient)value.getObjectValue();
+            }
         } catch (Exception e) {  
-
+            e.printStackTrace();
         }
 
         return null;
     }  
   
-    public void removeAllNews() {  
-        newsCache.removeAll();
+    public void removeAllNews() {
+        cacheManager.clearAll();
     }  
   
 }  
