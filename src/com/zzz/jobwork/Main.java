@@ -34,6 +34,7 @@ public class Main {
 
         try {
 
+            TaskThreadPool.scanPool();
 
             TaskThreadPool.scanWork(1);
             TaskThreadPool.scanWork(2);

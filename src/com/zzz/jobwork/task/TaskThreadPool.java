@@ -33,6 +33,8 @@ public class TaskThreadPool {
             if(listener != null){
                 config.setOnHttpTaskListener(listener);
             }
+
+
             addWork(config);
         }
     }
@@ -84,6 +86,21 @@ public class TaskThreadPool {
         }
     }
 
+    public static void scanPool(){
+        //注册观察线程池
+        service.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override
+                    public void run() {
+
+                        ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
+
+                        System.out.println(tp.getActiveCount());
+                        System.out.println(tp.getPoolSize());
+                    }
+                }, 1,
+                5, TimeUnit.SECONDS);
+    }
 
     public static void scanWork(int period){
         //每隔5秒
