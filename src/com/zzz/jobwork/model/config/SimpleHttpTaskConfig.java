@@ -7,7 +7,6 @@ import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.JsonUtil;
 import com.zzz.jobwork.utils.StringUtils;
 
-import javax.sound.midi.Soundbank;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -19,8 +18,6 @@ import java.util.regex.Pattern;
  */
 public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
 
-
-    public static final String HTTP_TASK_CONFIG_PREFIX=SimpleHttpTaskConfig.class.getSimpleName();
 
     private String url;
     private String requestMethod;
@@ -134,7 +131,7 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
     }
 
     public String getHost(){
-        if(StringUtils.isEmpty(url)){
+        if(!StringUtils.isEmpty(url)){
             Pattern p = Pattern.compile("(http://|https://)?([^/]*)",Pattern.CASE_INSENSITIVE);
             Matcher m = p.matcher(url);
             return m.find()?m.group(2):url;

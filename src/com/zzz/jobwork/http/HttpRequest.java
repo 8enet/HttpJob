@@ -10,13 +10,13 @@ import com.zzz.jobwork.utils.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
+ * http 任务请求
  * Created by zl on 2014/11/25.
  */
 public class HttpRequest {
@@ -34,41 +34,22 @@ public class HttpRequest {
         this.listener=listener;
     }
 
-    private static Map<String,SoftReference<OkHttpClient>> cache=new Hashtable<>();
-
     private  OkHttpClient creatHttpClient(){
-
         String key=config.format2String();
         OkHttpClient client= CacheManager.getInstance().getOkHttpClient(key);
-
-        logger.debug("httpclient return start");
         if(client != null){
             logger.debug("httpclient return from cache");
             return client;
         }
 
- //       SoftReference<OkHttpClient> ref=cache.get(key);
-        //OkHttpClient client=null;
-//        if (ref!=null &&   ref.get()!= null ){
-//            client=ref.get();
-//            logger.debug("httpclient return from cache");
-//            return client;
-//        }
-
-
         logger.debug("httpclient return from new instance");
         client=new OkHttpClient();
+        client.setConnectTimeout(20, TimeUnit.SECONDS);  //超时20s
         if(StringUtils.isEmpty(config.getProxyIp()) && config.getProxyPort() >0 ){
-//            HttpHost proxy = new HttpHost(config.getProxyIp(), config.getProxyPort());
-//            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
-//            client=HttpClients.custom().setRoutePlanner(routePlanner).build();
             Proxy proxy=new Proxy(Proxy.Type.HTTP, new InetSocketAddress(config.getProxyIp(), config.getProxyPort()));
             client.setProxy(proxy);
             logger.debug("httpclient set proxy:"+config.getProxyIp()+":"+proxy);
         }
-        //cache.put(key,new SoftReference<OkHttpClient>(client));
-
-//        CacheManager.getInstance().removeOkHttpClient(key);
         CacheManager.getInstance().putOkHttpClient(key,client);
         return client;
     }
@@ -78,14 +59,12 @@ public class HttpRequest {
         if(listener != null){
             listener.onStart();
         }
-
         Response response = null;
         try {
             boolean retry = false;
             int r = 3;
             OkHttpClient client=creatHttpClient();
             do {
-                //OkHttpClient client=creatHttpClient();
                 logger.debug(" http request " + config.getUrl());
                 response= client.newCall(getRequest()).execute();
                 logger.debug(" http resopnse "+response);
@@ -99,6 +78,8 @@ public class HttpRequest {
                         retry = true;
                         if (listener != null)
                             listener.onRetry(r);
+
+
                     } else {
                         retry = false;
                         if (listener != null)
@@ -194,7 +175,6 @@ public class HttpRequest {
                 for (Map.Entry<String, String> entry : entries) {
                     formBody.add(entry.getKey(),entry.getValue());
                 }
-
                 return formBody.build();
             }
 

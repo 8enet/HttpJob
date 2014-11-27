@@ -2,10 +2,13 @@ package com.zzz.jobwork;
 
 import com.mongodb.*;
 import com.squareup.okhttp.*;
+import com.sun.tools.classfile.StackMapTable_attribute;
 import com.zzz.jobwork.dao.MongoConnectManager;
 import com.zzz.jobwork.dao.TaskModelDAO;
 import com.zzz.jobwork.dao.TaskModelMongoDAOImpl;
 import com.zzz.jobwork.model.TaskModel;
+import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
+import com.zzz.jobwork.task.QueryTask;
 import com.zzz.jobwork.task.SampleHttpTaskListener;
 import com.zzz.jobwork.task.TaskThreadPool;
 
@@ -15,8 +18,11 @@ import net.sf.ehcache.Cache;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mongodb.morphia.Morphia;
+import sun.util.resources.LocaleData;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 
@@ -28,13 +34,36 @@ public class Main {
 
         try {
 
+
+            TaskThreadPool.scanWork(1);
+            TaskThreadPool.scanWork(2);
+            TaskThreadPool.scanWork(2);
+            TaskThreadPool.scanWork(1);
+            TaskThreadPool.scanWork(2);
+
+            if(true)
+                return;
+
+
+            SimpleHttpTaskConfig cfg1=new SimpleHttpTaskConfig("http://tieba.baidu.com/f?kw=java");
+
+            cfg1.setDefaultHeader();
+            cfg1.setDefaultReferer();
+
+
+            logger.debug(cfg1.format2String());
+
+
+
+
+
             final TaskModelDAO<TaskModel> dao= MongoConnectManager.getTaskModelDAO();
             logger.debug(dao.findAll());
 
             TaskModel tm3=dao.findById("5475e053269af139bfc62734");
             logger.debug(tm3);
             if(tm3 != null){
-                tm3.setTaskConfig("{\"url\":\"http://www.qq.com\",\"proxyPort\":0}");
+                tm3.setTaskConfig(cfg1.format2String());
                 System.out.println(dao.save(tm3));
             }
             TaskThreadPool.initWork();

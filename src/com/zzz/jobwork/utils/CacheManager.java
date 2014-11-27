@@ -50,7 +50,7 @@ public class CacheManager {
         return null;
     }  
   
-    public void removeAllNews() {
+    public void removeAllClient() {
         cacheManager.clearAll();
     }  
   

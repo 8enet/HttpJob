@@ -6,6 +6,7 @@ import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -19,11 +20,11 @@ public class TaskThreadPool {
 
     private static final int CORE_THREAD=10; //核心线程
     private static final int MAX_THREAD=50;  //最多线程
-    private static final long TIME_OUT_THREAD=5; //超时  10分钟
+    private static final long TIME_OUT_THREAD=5; //超时 5分钟
 
     private static ExecutorService threadPool =  new ThreadPoolExecutor(CORE_THREAD, MAX_THREAD,
             TIME_OUT_THREAD, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
-
+    private static ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
     private static CompletionService<Response> completionService = new ExecutorCompletionService<>(threadPool);
 
     public static void addWork(TaskModel taskModel,OnHttpTaskListener listener){
@@ -45,6 +46,7 @@ public class TaskThreadPool {
     public static void addWork(Callable callable){
         logger.debug("add work:"+callable);
         currentWork.add(callable);
+
     }
 
     /**
@@ -52,15 +54,18 @@ public class TaskThreadPool {
      */
     public static void pushWork(){
         if(!currentWork.isEmpty()){
-
             for(Callable callable:currentWork){
                 completionService.submit(callable);
             }
         }
     }
 
+    /**
+     * 初始化当前队列
+     */
     public static void initWork(){
         currentWork.clear();
+        currentWork=Collections.synchronizedList(currentWork);
     }
 
 
@@ -78,4 +83,14 @@ public class TaskThreadPool {
             e.printStackTrace();
         }
     }
+
+
+    public static void scanWork(int period){
+        //每隔5秒
+
+        service.scheduleAtFixedRate(
+                new QueryTask(), 1,
+                period, TimeUnit.SECONDS);
+    }
+
 }
