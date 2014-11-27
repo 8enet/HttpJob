@@ -3,9 +3,12 @@ package com.zzz.jobwork.utils;
 import com.squareup.okhttp.OkHttpClient;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CacheManager {
 
+    static Logger logger= LogManager.getLogger(CacheManager.class);
     private static CacheManager instance;  
 
     private Cache cache;
@@ -21,6 +24,7 @@ public class CacheManager {
         if (instance == null){  
             synchronized( CacheManager.class ){
                 if (instance == null){
+                    logger.debug("init EHCache mamager ");
                     instance = new CacheManager();  
                 }  
             }  
@@ -31,6 +35,7 @@ public class CacheManager {
     public void putOkHttpClient(String key,OkHttpClient client) {
         Element element = new Element(key,client);
         cache.put(element);
+        logger.debug("put "+key+"  to cache!");
     }  
   
     public void removeOkHttpClient(String key) {
@@ -41,10 +46,12 @@ public class CacheManager {
         try {
             Element value = cache.get(key);
             if(value != null){
+                logger.debug("get "+ key+"  from cache!");
                 return (OkHttpClient)value.getObjectValue();
             }
         } catch (Exception e) {  
             e.printStackTrace();
+            logger.error(e);
         }
 
         return null;

@@ -78,8 +78,6 @@ public class HttpRequest {
                         retry = true;
                         if (listener != null)
                             listener.onRetry(r);
-
-
                     } else {
                         retry = false;
                         if (listener != null)
@@ -89,6 +87,7 @@ public class HttpRequest {
             } while (retry);
         }catch (Exception e){
             e.printStackTrace();
+            logger.error(e);
         }finally {
             if(listener != null)
              listener.onFinsh();
@@ -179,7 +178,7 @@ public class HttpRequest {
             }
 
         }catch (Exception e){
-
+            logger.error(e);
         }
 
         return null;

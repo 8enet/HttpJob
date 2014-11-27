@@ -18,8 +18,8 @@ public class TaskThreadPool {
 
     private static Logger logger= LogManager.getLogger(TaskThreadPool.class);
 
-    private static final int CORE_THREAD=10; //核心线程
-    private static final int MAX_THREAD=50;  //最多线程
+    private static final int CORE_THREAD=100; //核心线程
+    private static final int MAX_THREAD=200;  //最多线程
     private static final long TIME_OUT_THREAD=5; //超时 5分钟
 
     private static ExecutorService threadPool =  new ThreadPoolExecutor(CORE_THREAD, MAX_THREAD,
@@ -33,13 +33,13 @@ public class TaskThreadPool {
             if(listener != null){
                 config.setOnHttpTaskListener(listener);
             }
-
-
             addWork(config);
         }
     }
 
-    private static List<Callable> currentWork=new LinkedList<>();
+
+
+    private static CopyOnWriteArrayList<Callable> currentWork=new CopyOnWriteArrayList<>();
 
     /**
      * 加入队列
@@ -55,22 +55,30 @@ public class TaskThreadPool {
      * 推送到线程池执行
      */
     public static void pushWork(){
+        int i=0;
+        //如果当前线程池繁忙  先把任务加入队列里面,避免线程池超时，崩溃
+        ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
+        int a=100-tp.getActiveCount()+5;
         if(!currentWork.isEmpty()){
             for(Callable callable:currentWork){
+                i++;
                 completionService.submit(callable);
+                currentWork.remove(callable);
+                if(i > a){
+                    break;
+                }
             }
         }
+
     }
 
     /**
      * 初始化当前队列
      */
     public static void initWork(){
-        currentWork.clear();
-        currentWork=Collections.synchronizedList(currentWork);
+
+
     }
-
-
 
     public static void seeWork(){
         try {
@@ -81,8 +89,10 @@ public class TaskThreadPool {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
+            logger.error(e);
         } catch (ExecutionException e) {
             e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -92,19 +102,20 @@ public class TaskThreadPool {
                 new Runnable() {
                     @Override
                     public void run() {
-
+                        pushWork();
                         ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
-
-                        System.out.println(tp.getActiveCount());
-                        System.out.println(tp.getPoolSize());
+                        logger.error("ThreadPool ActiveCount :" + tp.getActiveCount());
+                        logger.error("ThreadPool PoolSize : " + tp.getPoolSize());
+                        logger.error("ThreadPool CompletedTaskCount : " + tp.getCompletedTaskCount());
+                        logger.error("CurrentWork queue size:"+currentWork.size());
+                        logger.error("  -----------------  ");
                     }
                 }, 1,
-                5, TimeUnit.SECONDS);
+                3, TimeUnit.SECONDS);
     }
 
     public static void scanWork(int period){
         //每隔5秒
-
         service.scheduleAtFixedRate(
                 new QueryTask(), 1,
                 period, TimeUnit.SECONDS);

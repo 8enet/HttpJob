@@ -1,27 +1,16 @@
 package com.zzz.jobwork;
 
-import com.mongodb.*;
-import com.squareup.okhttp.*;
-import com.sun.tools.classfile.StackMapTable_attribute;
+import com.squareup.okhttp.Response;
 import com.zzz.jobwork.dao.MongoConnectManager;
 import com.zzz.jobwork.dao.TaskModelDAO;
-import com.zzz.jobwork.dao.TaskModelMongoDAOImpl;
 import com.zzz.jobwork.model.TaskModel;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
-import com.zzz.jobwork.task.QueryTask;
 import com.zzz.jobwork.task.SampleHttpTaskListener;
 import com.zzz.jobwork.task.TaskThreadPool;
-
-import com.zzz.jobwork.utils.Configs;
-import net.sf.ehcache.*;
-import net.sf.ehcache.Cache;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mongodb.morphia.Morphia;
-import sun.util.resources.LocaleData;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -34,13 +23,16 @@ public class Main {
 
         try {
 
-            TaskThreadPool.scanPool();
 
-            TaskThreadPool.scanWork(1);
-            TaskThreadPool.scanWork(2);
-            TaskThreadPool.scanWork(2);
-            TaskThreadPool.scanWork(1);
-            TaskThreadPool.scanWork(2);
+
+            TaskThreadPool.scanPool();
+            TaskThreadPool.scanWork(10);
+//            for(int i=0;i<10;i++) {
+//                TaskThreadPool.scanWork(5);
+//                TaskThreadPool.scanWork(2);
+//                TaskThreadPool.scanWork(2);
+//                TaskThreadPool.scanWork(1);
+//            }
 
             if(true)
                 return;
@@ -153,7 +145,7 @@ public class Main {
 
 
         TaskModel m2=new TaskModel();
-        m2.setTaskConfig("{\"url\":\"http://www.qq.com\",\"proxyPort\":0}");
+        m2.setTaskConfig("{\"url\":\"http://http://api.map.baidu.com/location/ip\",\"proxyPort\":0}");
 
 
         TaskModel m3=new TaskModel();

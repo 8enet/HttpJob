@@ -18,78 +18,43 @@ public class QueryTask implements Runnable{
 
     static Logger logger= LogManager.getLogger(QueryTask.class);
 
-    public static final int WAIT_TIME=2*1000;
-
-    private Object object=new Object();
-    private boolean run=true;
-
-    public void startScan(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (object){
-                    while (true){
-                        try {
-                            object.wait();
-                        }catch (Exception e){
-                            e.printStackTrace();
-                            try {
-                                TimeUnit.SECONDS.sleep(2);
-                            }catch (Exception e1){
-                                e1.printStackTrace();
-                            }
-                        }finally {
-
-                        }
-
-                    }
-                }
-            }
-        }).start();
-    }
-
-
-    public void execWork(){
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (object){
-                    run();
-                    object.notifyAll();
-                }
-            }
-        }).start();
-
-
-    }
-
-
     @Override
     public void run(){
         final TaskModelDAO<TaskModel> dao= MongoConnectManager.getTaskModelDAO();
         logger.debug(dao.findAll());
-        TaskThreadPool.initWork();
+
 
             try {
+                TaskThreadPool.initWork();
                 //TimeUnit.SECONDS.sleep(1);
                 //logger.debug(dao.findById("5475e053269af139bfc62734"));
                 final TaskModel t=dao.findById("5475e053269af139bfc62734");
-                TaskThreadPool.addWork(t,new SampleHttpTaskListener(){
-                    @Override
-                    public void onSuccess(Response response) {
-                        super.onSuccess(response);
-                        try {
-                            t.setLastRunTime(System.currentTimeMillis());
-                            dao.save(t);
-                            logger.debug(dao.findById("5475e053269af139bfc62734"));
-                        }catch (Exception e){
-                        }
-                    }
-                });
+                t.setTaskConfig("{\"url\":\"http://api.map.baidu.com/location/ip?ak=E4805d16520de693a3fe707cdc962045&ip=202.198.16.3&coor=bd09ll\",\"proxyPort\":0}");
+                //t.setLastRunTime(System.currentTimeMillis());
+               // dao.save(t);
+                for (int i=0;i<100;i++){
+                    TaskThreadPool.addWork(t,null);
+
+                }
+//                TaskThreadPool.addWork(t,new SampleHttpTaskListener(){
+//                    @Override
+//                    public void onSuccess(Response response) {
+//                        super.onSuccess(response);
+//                        try {
+//                            t.setTaskConfig("{\"url\":\"http://api.map.baidu.com/location/ip\",\"proxyPort\":0}");
+//                            t.setLastRunTime(System.currentTimeMillis());
+//                            dao.save(t);
+//                            logger.debug(dao.findById("5475e053269af139bfc62734"));
+//                        }catch (Exception e){
+//                        }
+//                    }
+//                });
             }catch (Exception e){
+                logger.error(e);
+            }finally {
+                TaskThreadPool.pushWork();
             }
-        TaskThreadPool.pushWork();
+
     }
 
 }

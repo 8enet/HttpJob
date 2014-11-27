@@ -6,6 +6,8 @@ import com.zzz.jobwork.model.TaskConfig;
 import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.JsonUtil;
 import com.zzz.jobwork.utils.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.regex.Pattern;
  */
 public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
 
+    static Logger logger= LogManager.getLogger(SimpleHttpTaskConfig.class);
 
     private String url;
     private String requestMethod;
@@ -116,6 +119,7 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
 
 
     public void setDefaultHeader(){
+        logger.debug("now  setDefaultHeader..");
         setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
         setHeader("Accept-Encoding", "gzip,deflate,sdch");
         setHeader("Cache-Control", "max-age=0");
@@ -142,11 +146,8 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
     public void setDefaultReferer(){
         String host=getHost();
         if(host != null){
-            setHeader("Referer","http://"+host+"/");
+            logger.debug("set default Referer is:"+host);
+            setHeader("Referer", "http://" + host+"/");
         }
     }
-
-
-
-
 }
