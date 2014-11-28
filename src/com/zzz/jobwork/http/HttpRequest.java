@@ -5,15 +5,19 @@ import com.squareup.okhttp.*;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.CacheManager;
+import com.zzz.jobwork.utils.Configs;
 import com.zzz.jobwork.utils.StringUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.awt.*;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URL;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * http 任务请求
@@ -34,6 +38,8 @@ public class HttpRequest {
         this.listener=listener;
     }
 
+    public static OkHttpClient client=new OkHttpClient();
+
     private  OkHttpClient creatHttpClient(){
         String key=config.format2String();
         OkHttpClient client= CacheManager.getInstance().getOkHttpClient(key);
@@ -44,6 +50,8 @@ public class HttpRequest {
 
         logger.debug("httpclient return from new instance");
         client=new OkHttpClient();
+
+
         client.setConnectTimeout(20, TimeUnit.SECONDS);  //超时20s
         if(StringUtils.isEmpty(config.getProxyIp()) && config.getProxyPort() >0 ){
             Proxy proxy=new Proxy(Proxy.Type.HTTP, new InetSocketAddress(config.getProxyIp(), config.getProxyPort()));
@@ -55,20 +63,32 @@ public class HttpRequest {
     }
 
 
+
     public Response execute(){
         if(listener != null){
             listener.onStart();
         }
         Response response = null;
+        //ExecutorService pool=Executors.newSingleThreadExecutor();
         try {
             boolean retry = false;
             int r = 3;
-            OkHttpClient client=creatHttpClient();
+            //OkHttpClient client=creatHttpClient();
+
+           URL url=new URL(config.getUrl());
+
+
+
+            //OkHttpClient client= new OkHttpClient().setDispatcher(new Dispatcher(pool));
+            //OkHttpClient client=new OkHttpClient();
             do {
                 logger.debug(" http request " + config.getUrl());
-                response= client.newCall(getRequest()).execute();
+                HttpURLConnection connection= (HttpURLConnection) url.openConnection();
+                //response= client.newCall(getRequest()).execute();
+
                 logger.debug(" http resopnse "+response);
-                if (response.isSuccessful()) {
+                if (connection.getResponseCode() == 200) {
+                    connection.disconnect();
                     retry = false;
                     if (listener != null)
                         listener.onSuccess(response);
@@ -80,6 +100,7 @@ public class HttpRequest {
                             listener.onRetry(r);
                     } else {
                         retry = false;
+                        connection.disconnect();
                         if (listener != null)
                             listener.onError(response, null);
                     }
@@ -89,12 +110,11 @@ public class HttpRequest {
             e.printStackTrace();
             logger.error(e);
         }finally {
+            //pool.shutdownNow();
             if(listener != null)
              listener.onFinsh();
         }
         return response;
-
-
     }
     
     

@@ -1,6 +1,7 @@
 package com.zzz.jobwork.task;
 
 import com.squareup.okhttp.Response;
+import com.zzz.jobwork.http.HttpRequest;
 import com.zzz.jobwork.model.TaskModel;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +40,7 @@ public class TaskThreadPool {
 
 
 
-    private static CopyOnWriteArrayList<Callable> currentWork=new CopyOnWriteArrayList<>();
+    private static CopyOnWriteArrayList<Callable> waitWork=new CopyOnWriteArrayList<>();
 
     /**
      * 加入队列
@@ -47,7 +48,7 @@ public class TaskThreadPool {
      */
     public static void addWork(Callable callable){
         logger.debug("add work:"+callable);
-        currentWork.add(callable);
+        waitWork.add(callable);
 
     }
 
@@ -59,11 +60,11 @@ public class TaskThreadPool {
         //如果当前线程池繁忙  先把任务加入队列里面,避免线程池超时，崩溃
         ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
         int a=100-tp.getActiveCount()+5;
-        if(!currentWork.isEmpty()){
-            for(Callable callable:currentWork){
+        if(!waitWork.isEmpty()){
+            for(Callable callable:waitWork){
                 i++;
                 completionService.submit(callable);
-                currentWork.remove(callable);
+                waitWork.remove(callable);
                 if(i > a){
                     break;
                 }
@@ -107,7 +108,7 @@ public class TaskThreadPool {
                         logger.error("ThreadPool ActiveCount :" + tp.getActiveCount());
                         logger.error("ThreadPool PoolSize : " + tp.getPoolSize());
                         logger.error("ThreadPool CompletedTaskCount : " + tp.getCompletedTaskCount());
-                        logger.error("CurrentWork queue size:"+currentWork.size());
+                        logger.error("Current wait queue size:" + waitWork.size());
                         logger.error("  -----------------  ");
                     }
                 }, 1,

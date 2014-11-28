@@ -26,16 +26,19 @@ public class Main {
 
 
             TaskThreadPool.scanPool();
-            TaskThreadPool.scanWork(10);
-//            for(int i=0;i<10;i++) {
-//                TaskThreadPool.scanWork(5);
-//                TaskThreadPool.scanWork(2);
-//                TaskThreadPool.scanWork(2);
-//                TaskThreadPool.scanWork(1);
-//            }
+            //TaskThreadPool.scanWork(10);
+           // for(int i=0;i<1;i++) {
+                TaskThreadPool.scanWork(3);
+            TaskThreadPool.scanWork(6);
+                TaskThreadPool.scanWork(5);
+               // TaskThreadPool.scanWork(2);
+               // TaskThreadPool.scanWork(1);
+           // }
 
             if(true)
                 return;
+
+
 
 
             SimpleHttpTaskConfig cfg1=new SimpleHttpTaskConfig("http://tieba.baidu.com/f?kw=java");
@@ -45,9 +48,6 @@ public class Main {
 
 
             logger.debug(cfg1.format2String());
-
-
-
 
 
             final TaskModelDAO<TaskModel> dao= MongoConnectManager.getTaskModelDAO();
