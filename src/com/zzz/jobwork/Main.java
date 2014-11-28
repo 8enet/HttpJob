@@ -3,6 +3,7 @@ package com.zzz.jobwork;
 import com.squareup.okhttp.Response;
 import com.zzz.jobwork.dao.MongoConnectManager;
 import com.zzz.jobwork.dao.TaskModelDAO;
+import com.zzz.jobwork.http.HttpRequest;
 import com.zzz.jobwork.model.TaskModel;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import com.zzz.jobwork.task.SampleHttpTaskListener;
@@ -24,6 +25,19 @@ public class Main {
         try {
 
 
+            HttpRequest req=HttpRequest.get("http://www.baidu.com");
+
+            System.out.println(req.code());
+
+            req.body();
+
+           // System.out.println(req.body());
+            System.out.println(req.contentLength());
+            System.out.println(req.headers());
+            //req.c
+
+            if(true)
+                return;
 
             TaskThreadPool.scanPool();
             //TaskThreadPool.scanWork(10);
@@ -31,12 +45,9 @@ public class Main {
                 TaskThreadPool.scanWork(3);
             TaskThreadPool.scanWork(6);
                 TaskThreadPool.scanWork(5);
-               // TaskThreadPool.scanWork(2);
+                TaskThreadPool.scanWork(2);
                // TaskThreadPool.scanWork(1);
            // }
-
-            if(true)
-                return;
 
 
 

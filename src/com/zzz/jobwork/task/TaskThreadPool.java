@@ -1,15 +1,11 @@
 package com.zzz.jobwork.task;
 
 import com.squareup.okhttp.Response;
-import com.zzz.jobwork.http.HttpRequest;
 import com.zzz.jobwork.model.TaskModel;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.*;
 
 /**
