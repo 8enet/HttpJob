@@ -22,8 +22,18 @@ public class Main {
 
         try {
 
+            TaskThreadPool.scanPool();
+            //TaskThreadPool.scanWork(10);
+            // for(int i=0;i<1;i++) {
+            TaskThreadPool.scanWork(3);
+            TaskThreadPool.scanWork(6);
+            TaskThreadPool.scanWork(5);
+             TaskThreadPool.scanWork(4);
+            // TaskThreadPool.scanWork(1);
+            // }
 
-
+            if (true)
+                return;
 
             HttpRequest req = HttpRequest.get("http://www.baidu.com");
             req.useProxy(null,80);
@@ -48,8 +58,7 @@ public class Main {
             System.out.println(HttpCookie.parse(StringUtils.toString(header)));
 
 
-            if (true)
-                return;
+
 
 
 
@@ -61,15 +70,6 @@ public class Main {
 
 
 
-            TaskThreadPool.scanPool();
-            //TaskThreadPool.scanWork(10);
-            // for(int i=0;i<1;i++) {
-            TaskThreadPool.scanWork(3);
-            TaskThreadPool.scanWork(6);
-            TaskThreadPool.scanWork(5);
-            // TaskThreadPool.scanWork(2);
-            // TaskThreadPool.scanWork(1);
-            // }
 
 
 

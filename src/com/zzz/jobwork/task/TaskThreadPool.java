@@ -15,12 +15,12 @@ public class TaskThreadPool {
 
     private static Logger logger= LogManager.getLogger(TaskThreadPool.class);
 
-    private static final int CORE_THREAD=100; //核心线程
-    private static final int MAX_THREAD=200;  //最多线程
+    private static final int CORE_THREAD=Runtime.getRuntime().availableProcessors()*50; //核心线程
+    private static final int MAX_THREAD=Runtime.getRuntime().availableProcessors()*80;  //最多线程
     private static final long TIME_OUT_THREAD=5; //超时回收 5分钟
     private static final int SCAN_POOL_STATUS=3; //每隔3秒扫描线程池状态
 
-    private static ExecutorService threadPool =  new ThreadPoolExecutor(CORE_THREAD, MAX_THREAD,
+    private static ThreadPoolExecutor threadPool =  new ThreadPoolExecutor(CORE_THREAD, MAX_THREAD,
             TIME_OUT_THREAD, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
     private static ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
     private static CompletionService<HttpResponse> completionService = new ExecutorCompletionService<>(threadPool);
@@ -46,7 +46,6 @@ public class TaskThreadPool {
     public static void addWork(Callable callable){
         logger.debug("add work:"+callable);
         waitWork.add(callable);
-
     }
 
     /**
@@ -54,9 +53,9 @@ public class TaskThreadPool {
      */
     public static void pushWork(){
         int i=0;
-        //如果当前线程池繁忙  先把任务加入队列里面,避免线程池超时，崩溃
-        ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
-        int a=100-tp.getActiveCount()+5;
+        //如果当前线程池繁忙  先把任务加入队列里面,避免任务超时
+
+        int a=threadPool.getCorePoolSize()-threadPool.getActiveCount()+5;
         if(!waitWork.isEmpty()){
             for(Callable callable:waitWork){
                 i++;
@@ -104,10 +103,10 @@ public class TaskThreadPool {
                     @Override
                     public void run() {
                         pushWork();
-                        ThreadPoolExecutor tp= (ThreadPoolExecutor) threadPool;
-                        logger.error("ThreadPool ActiveCount :" + tp.getActiveCount());
-                        logger.error("ThreadPool PoolSize : " + tp.getPoolSize());
-                        logger.error("ThreadPool CompletedTaskCount : " + tp.getCompletedTaskCount());
+
+                        logger.error("ThreadPool ActiveCount :" + threadPool.getActiveCount());
+                        logger.error("ThreadPool PoolSize : " + threadPool.getPoolSize());
+                        logger.error("ThreadPool CompletedTaskCount : " + threadPool.getCompletedTaskCount());
                         logger.error("Current wait queue size:" + waitWork.size());
                         logger.error("  -----------------  ");
                     }
