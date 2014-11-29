@@ -1,7 +1,7 @@
 package com.zzz.jobwork.task;
 
 
-import com.squareup.okhttp.Response;
+import com.zzz.jobwork.http.HttpResponse;
 
 /**
  * Created by zl on 14/11/26.
@@ -10,9 +10,9 @@ public interface OnHttpTaskListener {
 
     void onStart();
 
-    void onError(Response response,Exception e);
+    void onError(HttpResponse response,Exception e);
 
-    void onSuccess(Response response);
+    void onSuccess(HttpResponse response);
 
     void onRetry(int overRetry);
 

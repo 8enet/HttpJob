@@ -4,8 +4,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
-import com.zzz.jobwork.model.TaskModel;
-import com.zzz.jobwork.utils.Configs;
+import com.zzz.jobwork.dao.impl.TaskModelMongoDAOImpl;
+import com.zzz.jobwork.dao.impl.WorkRecordDAOImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mongodb.morphia.Morphia;
@@ -35,6 +35,10 @@ public class MongoConnectManager {
         return SingletonHolder.taskModelDAO;
     }
 
+    public static WorkRecordDAO getWorkRecordDAO(){
+        return SingletonHolder.workRecordDAO;
+    }
+
     private static final class SingletonHolder{
 
         private static final ThreadLocal<MongoClient> mongoClient = new ThreadLocal<MongoClient>() {
@@ -54,7 +58,8 @@ public class MongoConnectManager {
             }
         };
         private static final Morphia morphia=new Morphia();
-        private static final TaskModelDAO<TaskModel> taskModelDAO=new TaskModelMongoDAOImpl();
+        private static  TaskModelDAO taskModelDAO=new TaskModelMongoDAOImpl();
+        private static  WorkRecordDAO workRecordDAO=new WorkRecordDAOImpl();
 
     }
 

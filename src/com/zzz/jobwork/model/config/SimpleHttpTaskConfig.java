@@ -1,7 +1,7 @@
 package com.zzz.jobwork.model.config;
 
-import com.squareup.okhttp.Response;
 import com.zzz.jobwork.http.HttpExecutor;
+import com.zzz.jobwork.http.HttpResponse;
 import com.zzz.jobwork.model.TaskConfig;
 import com.zzz.jobwork.task.OnHttpTaskListener;
 import com.zzz.jobwork.utils.JsonUtil;
@@ -109,7 +109,7 @@ public class SimpleHttpTaskConfig  extends TaskConfig<SimpleHttpTaskConfig> {
     }
 
     @Override
-    public Response call() throws Exception {
+    public HttpResponse call() throws Exception {
         if(StringUtils.isEmpty(url)){
             throw new NullPointerException("http request url not null !!!");
         }

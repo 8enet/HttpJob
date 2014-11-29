@@ -2,7 +2,6 @@ package com.zzz.jobwork.model;
 
 import com.zzz.jobwork.model.config.TaskConfigFactory;
 import com.zzz.jobwork.utils.StringUtils;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 /**

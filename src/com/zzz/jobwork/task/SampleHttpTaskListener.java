@@ -1,6 +1,7 @@
 package com.zzz.jobwork.task;
 
-import com.squareup.okhttp.Response;
+
+import com.zzz.jobwork.http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,12 +18,12 @@ public class SampleHttpTaskListener implements OnHttpTaskListener {
     }
 
     @Override
-    public void onError(Response response, Exception e) {
+    public void onError(HttpResponse response, Exception e) {
         logger.info("onError:"+response+"    \n Exception"+e);
     }
 
     @Override
-    public void onSuccess(Response response) {
+    public void onSuccess(HttpResponse response) {
         logger.info("onSuccess:"+response);
     }
 

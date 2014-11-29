@@ -1,6 +1,6 @@
 package com.zzz.jobwork.task;
 
-import com.squareup.okhttp.Response;
+import com.zzz.jobwork.http.HttpResponse;
 import com.zzz.jobwork.model.TaskModel;
 import com.zzz.jobwork.model.config.SimpleHttpTaskConfig;
 import org.apache.logging.log4j.LogManager;
@@ -17,12 +17,13 @@ public class TaskThreadPool {
 
     private static final int CORE_THREAD=100; //核心线程
     private static final int MAX_THREAD=200;  //最多线程
-    private static final long TIME_OUT_THREAD=5; //超时 5分钟
+    private static final long TIME_OUT_THREAD=5; //超时回收 5分钟
+    private static final int SCAN_POOL_STATUS=3; //每隔3秒扫描线程池状态
 
     private static ExecutorService threadPool =  new ThreadPoolExecutor(CORE_THREAD, MAX_THREAD,
             TIME_OUT_THREAD, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
     private static ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
-    private static CompletionService<Response> completionService = new ExecutorCompletionService<>(threadPool);
+    private static CompletionService<HttpResponse> completionService = new ExecutorCompletionService<>(threadPool);
 
     public static void addWork(TaskModel taskModel,OnHttpTaskListener listener){
         SimpleHttpTaskConfig config= (SimpleHttpTaskConfig) taskModel.getRealTaskConfig();
@@ -77,9 +78,10 @@ public class TaskThreadPool {
 
     }
 
+    @Deprecated
     public static void seeWork(){
         try {
-            Future<Response> future = null;
+            Future<HttpResponse> future = null;
             while((future = completionService.take()) != null){
                 if(future.get() != null)
                 logger.debug(future.get());
@@ -93,8 +95,10 @@ public class TaskThreadPool {
         }
     }
 
+    /**
+     * 观察线程池状态
+     */
     public static void scanPool(){
-        //注册观察线程池
         service.scheduleAtFixedRate(
                 new Runnable() {
                     @Override
@@ -107,10 +111,15 @@ public class TaskThreadPool {
                         logger.error("Current wait queue size:" + waitWork.size());
                         logger.error("  -----------------  ");
                     }
-                }, 1,
-                3, TimeUnit.SECONDS);
+                }, SCAN_POOL_STATUS,
+                SCAN_POOL_STATUS, TimeUnit.SECONDS);
     }
 
+
+    /**
+     * 扫描任务并添加到线程池
+     * @param period
+     */
     public static void scanWork(int period){
         //每隔5秒
         service.scheduleAtFixedRate(
